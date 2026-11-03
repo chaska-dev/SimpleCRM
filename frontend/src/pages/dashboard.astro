@@ -1,0 +1,51 @@
+---
+/**
+ * /dashboard — post-auth home. 5 widgets + quick log bar (DashboardView island).
+ *
+ * SSR: fetch /api/dashboard/ server-side so the widgets appear
+ * in the initial HTML (`client:load` islands only hydrate later; without
+ * SSR-fetch the first paint shows the loading state).
+ *
+ * If the SSR fetch fails (backend down, network), it passes `initialData=null` and the
+ * island falls back to the client-side fetch on mount.
+ */
+export const prerender = false;
+
+import AppShell from "../layouts/AppShell.astro";
+import DashboardView from "../components/dashboard/DashboardView";
+import { getApiBase, meSSR, needsOnboarding, readLangCookie } from "../lib/auth-server";
+import { t } from "../i18n";
+import { normalizeDashboard, type RawDashboard } from "../components/dashboard/dashboard-data";
+import type { DashboardData } from "../types";
+
+const user = await meSSR(Astro);
+if (!user) return Astro.redirect("/login/");
+if (needsOnboarding(user)) return Astro.redirect("/welcome/");
+
+const lang = readLangCookie(Astro);
+
+// SSR fetch: forwards Django session cookies to the backend.
+async function fetchDashboard(): Promise<DashboardData | null> {
+  try {
+    const res = await fetch(`${getApiBase()}/api/dashboard/`, {
+      headers: { Cookie: Astro.request.headers.get("cookie") ?? "" },
+    });
+    if (!res.ok) return null;
+    const raw = (await res.json()) as RawDashboard;
+    return normalizeDashboard(raw);
+  } catch (_) {
+    return null;
+  }
+}
+
+const initialData = await fetchDashboard();
+---
+
+<AppShell user={user} lang={lang} title={t(lang, "dashboard.title")}>
+  <div>
+    <header class="mb-6 flex items-center justify-between gap-4">
+      <h1 class="text-xl font-semibold">{t(lang, "dashboard.title")}</h1>
+    </header>
+    <DashboardView client:load lang={lang} initialData={initialData} />
+  </div>
+</AppShell>

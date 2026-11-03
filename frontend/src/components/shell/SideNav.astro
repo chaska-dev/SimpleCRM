@@ -1,0 +1,352 @@
+---
+/**
+ * SideNav — sidebar navigation.
+ *
+ * Pure Astro (NOT a React island). Receives the active lang as a prop to show
+ * the labels already translated from the server render.
+ *
+ * Icons: lucide-react (animate-ui icons are wrapped around lucide
+ * + Motion; we use lucide directly to avoid the shadcn-cli setup).
+ *
+ * Per-user customization:
+ * - `sidebar_name` (from User): if set and non-empty, it is used as the header
+ *   brand; otherwise falls back to `shell.app_name` from i18n.
+ * - `sidebar_icon` (from User, absolute URL): if present, it is shown next to the
+ *   name in a rounded container. If absent, the brand Logo is shown
+ *   (small crop, accent color); the custom icon always wins.
+ *
+ * Collapsible:
+ * - State persisted in localStorage (`sidebar_collapsed`).
+ * - Chevron button in the header — toggles between expanded (w-60/lg:w-64)
+ *   and collapsed (w-16). When collapsed, labels and the tagline are hidden.
+ */
+import type { Lang, User } from "../../types";
+import { t } from "../../i18n";
+import { getMediaUrl } from "../../lib/media";
+import Logo from "../ui/Logo";
+import {
+  Home,
+  Users,
+  Building2,
+  Star,
+  Bell,
+  Tag,
+  Bot,
+  Settings,
+  ChevronLeft,
+  LogOut,
+} from "lucide-react";
+
+interface Props {
+  lang?: Lang;
+  currentPath?: string;
+  user?: User | null;
+}
+
+const { lang = "es", currentPath = Astro.url.pathname, user = null } = Astro.props;
+
+interface NavItem {
+  href: string;
+  i18nKey: string;
+  Icon: typeof Home;
+  match?: (path: string) => boolean;
+  /** Only visible with agent (MCP) access enabled. */
+  requiresMcp?: boolean;
+}
+
+const items: NavItem[] = [
+  {
+    href: "/dashboard/",
+    i18nKey: "shell.nav_dashboard",
+    Icon: Home,
+    match: (p) => p === "/" || p === "/dashboard" || p === "/dashboard/",
+  },
+  {
+    href: "/persons/",
+    i18nKey: "shell.nav_persons",
+    Icon: Users,
+    match: (p) => p.startsWith("/persons") && !p.startsWith("/persons/new"),
+  },
+  {
+    href: "/organizations/",
+    i18nKey: "shell.nav_organizations",
+    Icon: Building2,
+    match: (p) => p.startsWith("/organizations"),
+  },
+  {
+    href: "/favorites/",
+    i18nKey: "shell.nav_favorites",
+    Icon: Star,
+    match: (p) => p.startsWith("/favorites"),
+  },
+  {
+    href: "/reminders/",
+    i18nKey: "shell.nav_reminders",
+    Icon: Bell,
+    match: (p) => p.startsWith("/reminders"),
+  },
+  {
+    href: "/tags/",
+    i18nKey: "shell.nav_tags",
+    Icon: Tag,
+    match: (p) => p.startsWith("/tags"),
+  },
+  {
+    href: "/activity/",
+    i18nKey: "shell.nav_activity",
+    Icon: Bot,
+    match: (p) => p.startsWith("/activity"),
+    requiresMcp: true,
+  },
+  {
+    href: "/settings/",
+    i18nKey: "shell.nav_settings",
+    Icon: Settings,
+    match: (p) => p.startsWith("/settings"),
+  },
+];
+
+// Brand: custom name > i18n default.
+const customName = (user?.sidebar_name ?? "").trim();
+const defaultBrandName = t(lang, "shell.app_name");
+const brandName = customName || defaultBrandName;
+const brandIconUrl = getMediaUrl(user?.sidebar_icon);
+const collapseLabel = t(lang, "shell.collapse_sidebar");
+const expandLabel = t(lang, "shell.expand_sidebar");
+---
+
+<aside
+  id="sidenav"
+  data-collapsed="false"
+  class="group/sidenav hidden md:flex md:flex-col md:w-60 lg:w-64 border-r border-border bg-surface min-h-screen sticky top-0 self-start transition-[width] duration-normal ease-standard"
+  aria-label={brandName}
+  data-brand-name={brandName}
+  data-default-brand={defaultBrandName}
+>
+  <div class="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-border px-3">
+    <a
+      href="/dashboard/"
+      class="flex min-w-0 items-center gap-3 px-3 no-underline text-fg"
+      data-sidenav-label
+    >
+      <img
+        id="sidenav-brand-icon"
+        src={brandIconUrl || undefined}
+        hidden={!brandIconUrl}
+        alt=""
+        width="32"
+        height="32"
+        class="img-fade size-8 rounded-md object-cover bg-surface shrink-0"
+      />
+      <span id="sidenav-brand-logo" class="shrink-0" hidden={!!brandIconUrl}>
+        <Logo size={24} />
+      </span>
+      <span class="min-w-0">
+        <span class="block truncate text-sm font-semibold" data-brand-text>
+          {brandName}
+        </span>
+      </span>
+    </a>
+    <button
+      type="button"
+      id="sidenav-toggle"
+      class="btn-icon"
+      aria-label={collapseLabel}
+      aria-expanded="true"
+      aria-controls="sidenav"
+      title={collapseLabel}
+      data-collapse-label={collapseLabel}
+      data-expand-label={expandLabel}
+    >
+      <ChevronLeft className="size-4" aria-hidden="true" />
+    </button>
+  </div>
+
+  <nav class="flex flex-1 flex-col gap-1 px-3 py-4">
+    {
+      items.map((item) => {
+        const isActive = (item.match ?? ((p: string) => p === item.href))(currentPath);
+        return (
+          <a
+            href={item.href}
+            class={[
+              "flex h-9 items-center gap-3 rounded-md px-3 text-sm font-medium no-underline transition-colors duration-fast ease-standard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              isActive
+                ? "bg-primary-soft text-primary-soft-fg"
+                : "text-fg-muted hover:bg-muted hover:text-fg",
+            ].join(" ")}
+            aria-current={isActive ? "page" : undefined}
+            data-requires-mcp={item.requiresMcp ? "true" : undefined}
+            style={item.requiresMcp && !user?.mcp_enabled ? "display:none" : undefined}
+          >
+            <item.Icon className="size-4 shrink-0" aria-hidden="true" />
+            <span class="truncate" data-sidenav-label>
+              {t(lang, item.i18nKey)}
+            </span>
+          </a>
+        );
+      })
+    }
+  </nav>
+
+  <form
+    method="POST"
+    action="/api/auth/logout/"
+    id="logout-form"
+    class="border-t border-border px-3 py-3"
+  >
+    <button
+      type="button"
+      id="logout-btn"
+      aria-label={t(lang, "shell.logout")}
+      class="flex h-9 w-full items-center gap-3 rounded-md px-3 text-sm font-medium text-fg-muted transition-colors duration-fast ease-standard hover:bg-muted hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      <LogOut className="size-4 shrink-0" aria-hidden="true" />
+      <span data-sidenav-label>{t(lang, "shell.logout")}</span>
+    </button>
+  </form>
+</aside>
+
+<script>
+  // ---- Logout ----
+  document.getElementById("logout-btn")?.addEventListener("click", async (e) => {
+    e.preventDefault();
+    try {
+      await fetch("/api/auth/logout/", {
+        method: "POST",
+        credentials: "include",
+        headers: { "X-CSRFToken": getCookie("csrftoken") || "" },
+      });
+    } catch (_) {
+      /* best effort */
+    }
+    window.location.href = "/login/";
+  });
+
+  function getCookie(name: string): string | null {
+    const m = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
+    return m ? decodeURIComponent(m[1]) : null;
+  }
+
+  // ---- Brand icon: 200 ms fade once loaded ----
+  // `.img-fade` (global.css) starts at opacity 0; on load data-loaded is set.
+  // If the image fails it falls back to the brand Logo. prefers-reduced-motion: no fade.
+  const brandIcon = document.getElementById("sidenav-brand-icon") as HTMLImageElement | null;
+  if (brandIcon) {
+    const markLoaded = () => {
+      brandIcon.dataset.loaded = "true";
+    };
+    const markFailed = () => {
+      brandIcon.dataset.loaded = "false";
+      brandIcon.hidden = true;
+      const logo = document.getElementById("sidenav-brand-logo");
+      if (logo) logo.hidden = false;
+    };
+    brandIcon.addEventListener("load", markLoaded);
+    brandIcon.addEventListener("error", markFailed);
+    if (brandIcon.getAttribute("src") && brandIcon.complete) {
+      if (brandIcon.naturalWidth > 0) markLoaded();
+      else markFailed();
+    }
+  }
+
+  // ---- Live MCP access ----
+  // Settings dispatches `crm:user-updated` with `mcp_enabled`; we show or hide
+  // "AI activity" without reloading.
+  window.addEventListener("crm:user-updated", (e) => {
+    const detail = (e as CustomEvent<{ mcp_enabled?: boolean }>).detail ?? {};
+    if (typeof detail.mcp_enabled !== "boolean") return;
+    document.querySelectorAll<HTMLElement>("[data-requires-mcp]").forEach((el) => {
+      el.style.display = detail.mcp_enabled ? "" : "none";
+    });
+  });
+
+  // ---- Live branding ----
+  // Settings dispatches `crm:branding-updated` ({ name, iconUrl }) on saving the
+  // branding; we update the sidebar, mobile brand, aria-label and <title> without reloading.
+  window.addEventListener("crm:branding-updated", (e) => {
+    const aside = document.getElementById("sidenav");
+    if (!aside) return;
+    const detail = (e as CustomEvent<{ name?: string | null; iconUrl?: string | null }>).detail ?? {};
+    const oldBrand = aside.dataset.brandName ?? "";
+    const newBrand = (detail.name ?? "").trim() || aside.dataset.defaultBrand || oldBrand;
+
+    document.querySelectorAll<HTMLElement>("[data-brand-text]").forEach((el) => {
+      el.textContent = newBrand;
+    });
+    aside.setAttribute("aria-label", newBrand);
+    aside.dataset.brandName = newBrand;
+
+    const icon = document.getElementById("sidenav-brand-icon") as HTMLImageElement | null;
+    if (icon) {
+      if (detail.iconUrl) {
+        icon.dataset.loaded = "false";
+        icon.src = detail.iconUrl;
+        icon.hidden = false;
+      } else {
+        icon.removeAttribute("src");
+        icon.dataset.loaded = "false";
+        icon.hidden = true;
+      }
+    }
+    // Without a custom icon the brand Logo is shown.
+    const logo = document.getElementById("sidenav-brand-logo");
+    if (logo) logo.hidden = !!detail.iconUrl;
+
+    const suffix = ` · ${oldBrand}`;
+    if (oldBrand && document.title.endsWith(suffix)) {
+      document.title = document.title.slice(0, -suffix.length) + ` · ${newBrand}`;
+    }
+  });
+
+  // ---- Collapsible sidebar ----
+  // State persisted in localStorage (key: sidebar_collapsed → "1"/"0").
+  // No reload — only the width + label visibility change. CSS animation
+  // (transition-[width]) on the <aside>.
+  const STORAGE_KEY = "sidebar_collapsed";
+  const sidenav = document.getElementById("sidenav");
+  const toggle = document.getElementById("sidenav-toggle");
+
+  // Chevron SVG — the right-hand one is "expanded → collapsed" and
+  // we rotate it 180° when collapsed so it points right (visual
+  // cue for "expand").
+  const ChevronLeft = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>';
+  const ChevronRight = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>';
+
+  function applyCollapsed(collapsed: boolean) {
+    if (!sidenav) return;
+    sidenav.setAttribute("data-collapsed", collapsed ? "true" : "false");
+    // Width: collapsed = w-16 (64px), expanded = w-60 (240px) / lg:w-64 (256px).
+    // We use inline style to beat Tailwind's responsive classes.
+    sidenav.style.width = collapsed ? "4rem" : "";
+    // Hide labels (any [data-sidenav-label] inside).
+    sidenav.querySelectorAll<HTMLElement>("[data-sidenav-label]").forEach((el) => {
+      el.style.display = collapsed ? "none" : "";
+    });
+    // Re-center the nav items when collapsed (remove side padding
+    // so the icon stays aligned).
+    if (toggle) {
+      toggle.innerHTML = collapsed ? ChevronRight : ChevronLeft;
+      toggle.setAttribute("aria-expanded", collapsed ? "false" : "true");
+      // Dynamic accessible label: the texts come translated from the server
+      // (data-collapse-label / data-expand-label).
+      const label = (collapsed ? toggle.dataset.expandLabel : toggle.dataset.collapseLabel) ?? "";
+      toggle.setAttribute("aria-label", label);
+      toggle.setAttribute("title", label);
+    }
+    // Sync state on the main column (in case it wants to react to the change).
+    window.dispatchEvent(new CustomEvent("sidenav-collapse", { detail: { collapsed } }));
+  }
+
+  if (sidenav && toggle) {
+    // Hydrate from localStorage on every page load.
+    const stored = window.localStorage.getItem(STORAGE_KEY);
+    if (stored === "1") applyCollapsed(true);
+
+    toggle.addEventListener("click", () => {
+      const next = sidenav.getAttribute("data-collapsed") !== "true";
+      applyCollapsed(next);
+      try { window.localStorage.setItem(STORAGE_KEY, next ? "1" : "0"); } catch (_) {}
+    });
+  }
+</script>

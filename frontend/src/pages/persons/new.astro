@@ -1,0 +1,32 @@
+---
+/**
+ * /persons/new — person creation form.
+ *
+ * SSR preloads the existing tags so the React island does not make an extra
+ * round-trip on mount. If the backend is not available at render time,
+ * we fall back to `[]` (the form still allows creating tags on-the-fly).
+ */
+export const prerender = false;
+
+import AppShell from "../../layouts/AppShell.astro";
+import PersonCreateForm from "../../components/persons/new/PersonCreateForm";
+import { meSSR, needsOnboarding, readLangCookie } from "../../lib/auth-server";
+import { t } from "../../i18n";
+import { apiFetch } from "../../lib/api";
+import type { Tag } from "../../types";
+
+const user = await meSSR(Astro);
+if (!user) return Astro.redirect("/login/");
+if (needsOnboarding(user)) return Astro.redirect("/welcome/");
+
+const lang = readLangCookie(Astro);
+
+const cookieHeader = Astro.request.headers.get("cookie") || "";
+const tags = await apiFetch<Tag[]>("/api/tags/", {
+  headers: { Cookie: cookieHeader },
+}).catch(() => [] as Tag[]);
+---
+
+<AppShell user={user} lang={lang} title={t(lang, "person.form.new_person")}>
+  <PersonCreateForm client:load lang={lang} existingTags={tags} />
+</AppShell>

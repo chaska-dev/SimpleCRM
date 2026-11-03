@@ -1,0 +1,29 @@
+BEGIN:VCARD
+VERSION:4.0
+FN:Renata Quiroga Díaz
+N:Quiroga Díaz;Renata;;;
+NICKNAME:Rena
+ORG:Estudio Aurora
+TITLE:Arquitecta
+TEL;VALUE=uri;TYPE="voice,cell";PREF=1:tel:+54-11-5555-0188
+TEL;VALUE=uri;TYPE="work,voice":tel:+54-11-5555-0100
+EMAIL;TYPE=home;PREF=1:renata.quiroga@example.test
+EMAIL;TYPE=work:rquiroga@aurora.example.test
+URL:https://x.com/renataq_test
+URL:https://t.me/renataq_test
+BDAY:19850302
+CATEGORIES:Amigos,Universidad
+NOTE:Colega de la facultad.\nTiene un perro llamado Bruno.
+ADR;TYPE=work:;;Calle Falsa 123;Buenos Aires;;C1000;Argentina
+END:VCARD
+BEGIN:VCARD
+VERSION:4.0
+FN:Tomás Beltrán
+BDAY:--0229
+END:VCARD
+BEGIN:VCARD
+VERSION:4.0
+FN:Ivana Torres
+BDAY:--06-30
+EMAIL:ivana.torres@example.test
+END:VCARD

@@ -1,0 +1,41 @@
+---
+/**
+ * NoFOUC.astro
+ * Anti-flicker fallback. SSR already paints `<html data-theme>` and the inline
+ * accent (see Layout.astro) from the user/cookies; this script only
+ * acts if they are missing (e.g. a page that does not go through Layout.astro with prefs): it uses the
+ * `preferred_theme` / `preferred_accent` cookies and, with no value, the dark theme.
+ * localStorage is no longer a source. No imports: the regex and the
+ * contrast formula duplicate those in `src/styles/themes.ts` (isValidHex / accentForeground).
+ */
+---
+<script is:inline>
+  (function () {
+    var root = document.documentElement;
+    function cookie(name) {
+      var m = document.cookie.match(new RegExp("(?:^|; )" + name + "=([^;]*)"));
+      return m ? decodeURIComponent(m[1]) : "";
+    }
+    if (!root.getAttribute("data-theme")) {
+      var theme = cookie("preferred_theme");
+      root.setAttribute("data-theme", theme === "light" ? "light" : "dark");
+    }
+    if (!root.style.getPropertyValue("--accent-base")) {
+      var hex = cookie("preferred_accent");
+      if (/^#[0-9a-fA-F]{6}$/.test(hex)) {
+        var lum = function (h) {
+          var ch = function (i) {
+            var c = parseInt(h.slice(1 + i * 2, 3 + i * 2), 16) / 255;
+            return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+          };
+          return 0.2126 * ch(0) + 0.7152 * ch(1) + 0.0722 * ch(2);
+        };
+        var l = lum(hex);
+        var ratioWhite = 1.05 / (l + 0.05);
+        var ratioDark = (l + 0.05) / (lum("#18181b") + 0.05);
+        root.style.setProperty("--accent-base", hex);
+        root.style.setProperty("--accent-fg", ratioWhite >= ratioDark ? "#ffffff" : "#18181b");
+      }
+    }
+  })();
+</script>

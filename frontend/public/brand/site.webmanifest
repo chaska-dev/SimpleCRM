@@ -1,0 +1,14 @@
+{
+  "name": "Simple CRM",
+  "short_name": "Simple CRM",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "theme_color": "#db2777",
+  "background_color": "#0b0b0e",
+  "icons": [
+    { "src": "/brand/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/brand/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/brand/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

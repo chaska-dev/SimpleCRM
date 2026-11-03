@@ -1,0 +1,359 @@
+@import "./skeleton.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Design system tokens — source of truth: src/styles/themes.ts
+ * This file injects those tokens as CSS vars in :root[data-theme="..."].
+ * Changing palette / typography / radii / shadows = edit themes.ts (or themes.md
+ * where it is regenerated from). Do NOT hardcode colors in components.
+ *
+ * Semantics: `primary` = brand accent (user-customizable),
+ * `accent` = danger red (errors, destructive, required asterisk).
+ */
+
+@layer base {
+  /* Customizable accent: common to both themes. `applyAccent` overrides
+     --accent-base and --accent-fg inline on <html>. */
+  :root {
+    --accent-base: #db2777;
+    --accent-fg: #ffffff;
+    --color-primary: var(--accent-base);
+    --color-primary-fg: var(--accent-fg);
+    --color-primary-hover: color-mix(in oklch, var(--accent-base) 88%, black);
+    --color-ring: color-mix(in oklch, var(--accent-base) 45%, transparent);
+  }
+
+  :root[data-theme="light"],
+  [data-theme-scope="light"] {
+    /* === Light ===
+       `[data-theme-scope]` allows painting a preview of one theme inside
+       another (/welcome/ cards) with the same tokens. */
+    --color-bg: #f7f7f8;
+    --color-surface: #ffffff;
+    --color-fg: #18181b;
+    --color-fg-muted: #71717a;
+    --color-secondary: #f4f4f5;
+    --color-muted: #f4f4f5;
+    --color-border: #e4e4e7;
+    --color-accent: #dc2626;
+    --color-accent-fg: #ffffff;
+
+    /* Accent derivatives that depend on surface / fg */
+    --color-primary-soft: color-mix(in oklch, var(--accent-base) 12%, var(--color-surface));
+    --color-primary-soft-fg: color-mix(in oklch, var(--accent-base) 80%, var(--color-fg));
+
+    /* Semantic states (light) */
+    --color-status-ok: #dcfce7;
+    --color-status-ok-fg: #166534;
+    --color-status-due-soon: #fef3c7;
+    --color-status-due-soon-fg: #92400e;
+    --color-status-overdue: #fee2e2;
+    --color-status-overdue-fg: #991b1b;
+    --color-status-unknown: #f4f4f5;
+    --color-status-unknown-fg: #52525b;
+
+    /* Avatars: 6 neutral bg/fg pairs (they do not use the accent). See avatarTone(). */
+    --avatar-1-bg: #e2e8f0;
+    --avatar-1-fg: #334155;
+    --avatar-2-bg: #dbeafe;
+    --avatar-2-fg: #1e40af;
+    --avatar-3-bg: #dcfce7;
+    --avatar-3-fg: #166534;
+    --avatar-4-bg: #fef3c7;
+    --avatar-4-fg: #92400e;
+    --avatar-5-bg: #ede9fe;
+    --avatar-5-fg: #5b21b6;
+    --avatar-6-bg: #ffe4e6;
+    --avatar-6-fg: #9f1239;
+
+    /* Typography */
+    --font-family-sans: "Inter Variable", "Inter", system-ui, sans-serif;
+    --font-family-display: "Inter Variable", "Inter", system-ui, sans-serif;
+    --font-family-mono: ui-monospace, "SFMono-Regular", Menlo, monospace;
+    --font-weight-regular: 400;
+    --font-weight-medium: 500;
+    --font-weight-bold: 700;
+    --font-weight-display: 600;
+
+    /* Borders and radii */
+    --border-width-thin: 1px;
+    --border-width-default: 1px;
+    --border-width-thick: 1px;
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+
+    /* Soft shadows */
+    --shadow-none: none;
+    --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.05);
+    --shadow-md: 0 1px 3px rgb(0 0 0 / 0.08), 0 1px 2px rgb(0 0 0 / 0.04);
+    --shadow-lg: 0 10px 30px rgb(0 0 0 / 0.10);
+
+    /* Motion */
+    --motion-duration-fast: 80ms;
+    --motion-duration-normal: 160ms;
+    --motion-duration-slow: 240ms;
+    --motion-easing-standard: cubic-bezier(0.2, 0, 0, 1);
+    --motion-easing-ease-out: cubic-bezier(0, 0, 0.2, 1);
+
+    color-scheme: light;
+  }
+
+  :root[data-theme="dark"],
+  [data-theme-scope="dark"] {
+    /* === Dark (default) === */
+    --color-bg: #0b0b0e;
+    --color-surface: #16161a;
+    --color-fg: #fafafa;
+    --color-fg-muted: #a1a1aa;
+    --color-secondary: #1f1f23;
+    --color-muted: #1f1f23;
+    --color-border: #27272a;
+    --color-accent: #ef4444;
+    --color-accent-fg: #ffffff;
+
+    /* Accent derivatives that depend on surface / fg */
+    --color-primary-soft: color-mix(in oklch, var(--accent-base) 12%, var(--color-surface));
+    --color-primary-soft-fg: color-mix(in oklch, var(--accent-base) 80%, var(--color-fg));
+
+    /* Semantic states (dark) */
+    --color-status-ok: #052e1a;
+    --color-status-ok-fg: #4ade80;
+    --color-status-due-soon: #3a2a05;
+    --color-status-due-soon-fg: #fbbf24;
+    --color-status-overdue: #3b0d0d;
+    --color-status-overdue-fg: #f87171;
+    --color-status-unknown: #27272a;
+    --color-status-unknown-fg: #a1a1aa;
+
+    /* Avatars (dark) */
+    --avatar-1-bg: #1e293b;
+    --avatar-1-fg: #cbd5e1;
+    --avatar-2-bg: #172554;
+    --avatar-2-fg: #93c5fd;
+    --avatar-3-bg: #052e16;
+    --avatar-3-fg: #86efac;
+    --avatar-4-bg: #3a2a05;
+    --avatar-4-fg: #fcd34d;
+    --avatar-5-bg: #2e1065;
+    --avatar-5-fg: #c4b5fd;
+    --avatar-6-bg: #4c0519;
+    --avatar-6-fg: #fda4af;
+
+    /* Typography and motion = same values as light */
+    --font-family-sans: "Inter Variable", "Inter", system-ui, sans-serif;
+    --font-family-display: "Inter Variable", "Inter", system-ui, sans-serif;
+    --font-family-mono: ui-monospace, "SFMono-Regular", Menlo, monospace;
+    --font-weight-regular: 400;
+    --font-weight-medium: 500;
+    --font-weight-bold: 700;
+    --font-weight-display: 600;
+
+    --border-width-thin: 1px;
+    --border-width-default: 1px;
+    --border-width-thick: 1px;
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+
+    --shadow-none: none;
+    --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+    --shadow-md: 0 1px 3px rgb(0 0 0 / 0.5);
+    --shadow-lg: 0 10px 30px rgb(0 0 0 / 0.6);
+
+    --motion-duration-fast: 80ms;
+    --motion-duration-normal: 160ms;
+    --motion-duration-slow: 240ms;
+    --motion-easing-standard: cubic-bezier(0.2, 0, 0, 1);
+    --motion-easing-ease-out: cubic-bezier(0, 0, 0.2, 1);
+
+    color-scheme: dark;
+  }
+
+  /* === Base resets === */
+  html {
+    @apply antialiased;
+  }
+  body {
+    @apply bg-bg text-fg font-sans;
+    font-feature-settings: "cv11";
+  }
+  h1, h2, h3, h4 {
+    @apply font-semibold tracking-tight;
+  }
+  /* Checkbox / radio: 16px with the user's accent */
+  input[type="checkbox"],
+  input[type="radio"] {
+    @apply size-4 shrink-0;
+    accent-color: var(--color-primary);
+  }
+  input[type="checkbox"] {
+    @apply rounded;
+  }
+  /* Base buttons and links */
+  a {
+    @apply text-fg underline-offset-2;
+  }
+}
+
+/*
+ * Shared components (components layer): Tailwind utilities
+ * (pl-9, w-auto, h-auto...) can override them without fighting over order.
+ */
+@layer components {
+  /* Base card: 1px border + soft shadow */
+  .neo-card {
+    @apply rounded-lg border border-border bg-surface shadow-sm;
+  }
+  .neo-card-hover {
+    @apply transition-[box-shadow,border-color] duration-normal ease-standard;
+  }
+  .neo-card-hover:hover {
+    @apply shadow-md;
+    /* border one shade darker: mix of border + fg */
+    border-color: color-mix(in oklch, var(--color-border) 80%, var(--color-fg));
+  }
+  .neo-btn {
+    @apply inline-flex h-9 items-center justify-center gap-2 rounded-md border border-border bg-surface px-3.5 text-sm font-medium text-fg shadow-sm transition-colors duration-fast ease-standard hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring;
+  }
+  .neo-btn-ghost {
+    @apply border-transparent bg-transparent shadow-none hover:bg-muted;
+  }
+  .neo-btn-primary {
+    @apply border-transparent bg-primary text-primary-fg hover:bg-primary-hover;
+  }
+  .neo-btn-danger {
+    @apply border-transparent bg-accent text-accent-fg hover:bg-accent hover:opacity-90;
+  }
+  .neo-btn-sm {
+    @apply h-8 px-3 text-sm font-medium;
+  }
+  /* Icon-only button: always with aria-label and title */
+  .btn-icon {
+    @apply inline-flex size-8 shrink-0 items-center justify-center rounded-md text-fg-muted transition-colors duration-fast ease-standard hover:bg-muted hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring;
+  }
+  .btn-icon:disabled {
+    @apply cursor-not-allowed opacity-50;
+  }
+  /* Delete in a row: red only on hover */
+  .btn-icon-danger {
+    @apply hover:bg-status-overdue hover:text-accent;
+  }
+  .neo-input {
+    @apply block h-9 w-full rounded-md border border-border bg-surface px-3 text-sm text-fg placeholder:text-fg-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring;
+  }
+  /* Legacy alias: all controls measure the same (h-9). */
+  .neo-input-sm {
+    @apply h-9;
+  }
+  /* Textarea: no fixed height */
+  textarea.neo-input {
+    @apply h-auto py-2;
+  }
+
+  /* Disabled (all button variants): flat gray, never a washed-out accent. */
+  .neo-btn:disabled,
+  .neo-btn:disabled:hover,
+  .neo-btn[aria-disabled="true"],
+  .neo-btn[aria-disabled="true"]:hover {
+    border-color: var(--color-border);
+    background-color: var(--color-muted);
+    color: var(--color-fg-muted);
+    box-shadow: none;
+    cursor: not-allowed;
+  }
+  .neo-input:disabled {
+    @apply cursor-not-allowed bg-muted text-fg-muted shadow-none;
+  }
+}
+
+@layer utilities {
+  /* Backgrounds with brand / state color ALWAYS carry their paired fg so
+     the text is readable. Overrides any inherited text-*.
+     Tokens --color-primary-fg (computed by JS based on contrast) and
+     --color-accent-fg. */
+  .bg-primary {
+    color: var(--color-primary-fg);
+  }
+  .bg-accent {
+    color: var(--color-accent-fg);
+  }
+  /* status-* bgs already have their -fg pair in the tokens, but just in case: */
+  .bg-status-due-soon {
+    color: var(--color-status-due-soon-fg);
+  }
+  .bg-status-overdue {
+    color: var(--color-status-overdue-fg);
+  }
+  .bg-status-ok {
+    color: var(--color-status-ok-fg);
+  }
+  .bg-status-unknown {
+    color: var(--color-status-unknown-fg);
+  }
+}
+
+/* Loading transitions (spec v7 N). LoadingSwap uses .ls-*; .fade-in is the same
+   200 ms fade for content that appears after an action (tab change,
+   view, filters). With prefers-reduced-motion: reduce there is no movement or fade. */
+@keyframes ls-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes ls-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+.fade-in,
+.ls-in {
+  animation: ls-fade-in var(--ls-duration, 200ms) ease-out backwards;
+}
+.ls-out {
+  animation: ls-fade-out var(--ls-duration, 200ms) ease-out both;
+  pointer-events: none;
+}
+.ls-grid {
+  display: grid;
+}
+.ls-layer {
+  grid-area: 1 / 1;
+  min-width: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .fade-in,
+  .ls-in,
+  .ls-out {
+    animation: none !important;
+  }
+  .ls-out {
+    opacity: 0;
+  }
+}
+
+/* Uploaded images (Avatar, OrgLogo, sidebar icon): fade in over 200 ms once
+   loaded, over the initials or the placeholder (spec v7 O). */
+.img-fade {
+  opacity: 0;
+  transition: opacity 200ms ease-out;
+}
+.img-fade[data-loaded="true"] {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .img-fade {
+    transition: none;
+  }
+}

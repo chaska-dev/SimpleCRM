@@ -1,0 +1,27 @@
+---
+/**
+ * /settings — Settings page (5 tabs: General, Defaults, Storage,
+ * Encryption, Account). Server-side auth check + shell render,
+ * and React island (`client:load`) for the interactive tabs.
+ *
+ * Auth pattern: each authenticated page does its own `meSSR + redirect`
+ * inline (see `lib/auth-server.ts` for the reason — Astro 5 bug with
+ * redirects from components).
+ */
+export const prerender = false;
+
+import AppShell from "../../layouts/AppShell.astro";
+import SettingsView from "../../components/settings/SettingsView";
+import { meSSR, needsOnboarding, readLangCookie } from "../../lib/auth-server";
+import { t } from "../../i18n";
+
+const user = await meSSR(Astro);
+if (!user) return Astro.redirect("/login/");
+if (needsOnboarding(user)) return Astro.redirect("/welcome/");
+
+const lang = readLangCookie(Astro);
+---
+
+<AppShell user={user} lang={lang} title={t(lang, "settings.title")}>
+  <SettingsView client:load lang={lang} user={user} />
+</AppShell>

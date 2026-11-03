@@ -1,0 +1,54 @@
+# Reverse proxy (the only public entry point of the Docker stack).
+#
+#   /api/*  /admin/*  /static/*  /media/*  /mcp  /mcp/*   ->  backend:8000 (Django + MCP)
+#   everything else                                        ->  frontend:4321 (Astro SSR)
+#
+# SITE_ADDRESS (environment variable, default ":80"):
+#   ":80"            Plain HTTP on the container port (local use, 127.0.0.1:APP_PORT).
+#   "crm.example.com" Caddy obtains and renews TLS (Let's Encrypt) on its own; ports 80 and
+#                    443 must be published (see docs/configuration.md) and USE_HTTPS=True set.
+{
+	# No admin API exposed outside the container (internal loopback only,
+	# used by the healthcheck).
+	admin localhost:2019
+	# ACME/TLS errors go to stdout; requests are not logged (search URLs
+	# carry people's names).
+	log {
+		output stdout
+		level WARN
+	}
+}
+
+{$SITE_ADDRESS::80} {
+	encode zstd gzip
+
+	header {
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=(), interest-cohort=()"
+		# Only directives that do not break the app (no controlled inline scripts): prevents
+		# embedding the site, changing <base>, plugins and submitting forms to other origins.
+		Content-Security-Policy "frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self'"
+		-Server
+	}
+
+	# HSTS only when the connection arrived over TLS (real domain). With ":80" it is not sent.
+	@https protocol https
+	header @https Strict-Transport-Security "max-age=15552000"
+
+	@backend path /api/* /admin/* /static/* /media/* /mcp /mcp/*
+	handle @backend {
+		request_body {
+			# Attachments of up to 25 MB (ATTACHMENT_MAX_BYTES) plus the multipart envelope.
+			max_size 30MB
+		}
+		reverse_proxy backend:8000 {
+			flush_interval -1
+		}
+	}
+
+	handle {
+		reverse_proxy frontend:4321
+	}
+}

@@ -1,0 +1,24 @@
+---
+/**
+ * /tags — tags page. Grid list + inline CRUD.
+ *
+ * `TagsView` is a React island (`client:load`) that does the fetch + UI.
+ * Here we only authenticate and mount the shell.
+ */
+export const prerender = false;
+
+import AppShell from "../../layouts/AppShell.astro";
+import TagsView from "../../components/tags/TagsView";
+import { meSSR, needsOnboarding, readLangCookie } from "../../lib/auth-server";
+import { t } from "../../i18n";
+
+const user = await meSSR(Astro);
+if (!user) return Astro.redirect("/login/");
+if (needsOnboarding(user)) return Astro.redirect("/welcome/");
+
+const lang = readLangCookie(Astro);
+---
+
+<AppShell user={user} lang={lang} title={t(lang, "tag.title")}>
+  <TagsView client:load lang={lang} />
+</AppShell>

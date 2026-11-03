@@ -1,0 +1,22 @@
+---
+/**
+ * /activity — history of AI agent (MCP) actions.
+ * Logic in the React island `ActivityView` (client:load). If MCP access
+ * is off, the view shows an empty state that leads to Settings.
+ */
+export const prerender = false;
+
+import AppShell from "../../layouts/AppShell.astro";
+import ActivityView from "../../components/activity/ActivityView";
+import { meSSR, needsOnboarding, readLangCookie } from "../../lib/auth-server";
+import { t } from "../../i18n";
+
+const user = await meSSR(Astro);
+if (!user) return Astro.redirect("/login/");
+if (needsOnboarding(user)) return Astro.redirect("/welcome/");
+const lang = readLangCookie(Astro);
+---
+
+<AppShell user={user} lang={lang} title={t(lang, "activity.title")}>
+  <ActivityView client:load lang={lang} user={user} />
+</AppShell>

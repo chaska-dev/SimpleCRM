@@ -1,0 +1,8 @@
+First Name,Middle Name,Last Name,Phonetic First Name,Phonetic Middle Name,Phonetic Last Name,Name Prefix,Name Suffix,Nickname,File As,Organization Name,Organization Title,Organization Department,Birthday,Notes,Photo,Labels,E-mail 1 - Label,E-mail 1 - Value,E-mail 2 - Label,E-mail 2 - Value,Phone 1 - Label,Phone 1 - Value,Phone 2 - Label,Phone 2 - Value,Address 1 - Label,Address 1 - Formatted,Website 1 - Label,Website 1 - Value
+Andrea,,Lozano Vega,,,,,,Andre,,Taller Lozano,Contadora,Finanzas,1992-11-08,"Prefiere que la llamen por la tarde.
+Tiene dos gatos.",,* myContacts ::: Amigos ::: * starred,Home,andrea.lozano@example.test,Work,alozano@taller.example.test,Mobile,+51 944 123 456,Work,+51 1 555 0123,Home,"Jr. de la Unión 100
+Lima",Instagram,https://www.instagram.com/andrea.lozano.test
+Bruno,,Salas,,,,,,,,,,,--09-03,,,* myContacts,,,,,Mobile,+34 611 222 333,,,,,,
+Camila,,,,,,,,,,Librería Sol,,,,,,* myContacts ::: Trabajo,,camila@libreriasol.example.test,,,Work,+52 55 5555 0166,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+Édgar,,Núñez,,,,,,,,,,,1979-05-30,,,,Home,edgar.nunez@example.test,,,Mobile,+51 944 123 456,,,,,,

@@ -1,0 +1,235 @@
+---
+/**
+ * /login — Login form.
+ *
+ * - SSR: if there is already an active session, redirects to /dashboard/.
+ * - Warms the `csrftoken` cookie with `csrfSSR` so the client-side POST
+ *   can read it from `document.cookie` (Django compares cookie vs header).
+ * - Renders the form with shared classes (`neo-card`, `neo-input`, `neo-btn`).
+ * - Submit is handled client-side: JSON POST to /api/auth/login/ with
+ *   `X-CSRFToken` + `Content-Type: application/json` + `credentials: include`.
+ *   200 → /dashboard/. 400/401 → translated message. Others → generic error.
+ * - The button is disabled and shows "..." while processing. No alerts.
+ */
+export const prerender = false;
+
+import Layout from "../layouts/Layout.astro";
+import {
+  meSSR,
+  csrfSSR,
+  needsOnboarding,
+  readLangCookie,
+  registrationStatusSSR,
+} from "../lib/auth-server";
+import LangSwitcher from "../components/shell/LangSwitcher";
+import Logo from "../components/ui/Logo";
+import { t } from "../i18n";
+
+const user = await meSSR(Astro);
+if (user) return Astro.redirect(needsOnboarding(user) ? "/welcome/" : "/dashboard/");
+
+const csrf = await csrfSSR(Astro);
+// "Create account" only appears if the backend allows registering (first account or ALLOW_REGISTRATION);
+// with the backend down (`error`) `can_register` is false and the link is hidden too.
+const { can_register: canRegister } = await registrationStatusSSR(Astro);
+const lang = readLangCookie(Astro);
+
+// i18n strings used both in SSR and in the client-side script.
+const appName = t(lang, "shell.app_name");
+const title = t(lang, "auth.login_title");
+const emailLabel = t(lang, "auth.email");
+const passwordLabel = t(lang, "auth.password");
+const submitLabel = t(lang, "auth.submit_login");
+const submittingLabel = "...";
+const wrongCredentialsMsg = t(lang, "auth.wrong_credentials");
+const errorGenericMsg = t(lang, "messages.error_generic");
+const tooManyAttemptsMsg = t(lang, "auth.too_many_attempts");
+const noAccountYet = t(lang, "auth.no_account_yet");
+const registerTitle = t(lang, "auth.register_title");
+---
+
+<Layout title={`${title} · ${appName}`} variant="auth">
+  <div class="fixed right-4 top-4 z-10">
+    <LangSwitcher client:load lang={lang} mode="anonymous" />
+  </div>
+  <main class="min-h-screen flex items-center justify-center px-6 py-12">
+    <div class="neo-card w-full max-w-md p-6">
+      <div class="mb-4 flex justify-center">
+        <Logo size={48} />
+      </div>
+      <header class="mb-6">
+        <h1 class="text-xl font-semibold">{title}</h1>
+      </header>
+
+      <form
+        id="login-form"
+        class="space-y-4"
+        novalidate
+        data-csrf-token={csrf}
+        autocomplete="on"
+      >
+        <div>
+          <label for="login-email" class="mb-1.5 block text-sm font-medium">
+            {emailLabel}
+          </label>
+          <input
+            id="login-email"
+            name="email"
+            type="email"
+            inputmode="email"
+            autocomplete="email"
+            required
+            class="neo-input"
+          />
+        </div>
+
+        <div>
+          <label for="login-password" class="mb-1.5 block text-sm font-medium">
+            {passwordLabel}
+          </label>
+          <input
+            id="login-password"
+            name="password"
+            type="password"
+            autocomplete="current-password"
+            required
+            class="neo-input"
+          />
+        </div>
+
+        <p
+          id="login-error"
+          class="hidden text-sm font-medium text-accent"
+          role="alert"
+          aria-live="polite"
+        >
+        </p>
+
+        <button
+          id="login-submit"
+          type="submit"
+          class="neo-btn neo-btn-primary w-full"
+        >
+          {submitLabel}
+        </button>
+      </form>
+
+      {
+        canRegister && (
+          <p class="mt-6 text-center text-sm text-fg-muted">
+            {noAccountYet}
+            <a href="/register/" class="ml-1 font-medium text-fg underline underline-offset-2">
+              {registerTitle}
+            </a>
+          </p>
+        )
+      }
+    </div>
+  </main>
+</Layout>
+
+<script
+  define:vars={{
+    submitLabel,
+    submittingLabel,
+    wrongCredentialsMsg,
+    errorGenericMsg,
+    tooManyAttemptsMsg,
+  }}
+>
+  // Client-side handlers for the login form.
+  // - Reads CSRF from the `csrftoken` cookie (set by `csrfSSR` in SSR).
+  //   If for some reason it does not exist, it fires GET /api/auth/csrf/ first.
+  // - JSON POST to /api/auth/login/. 200 → /dashboard/. 400/401 → translated message.
+  // - The button stays disabled with "..." while processing. No alerts.
+
+  const form = /** @type {HTMLFormElement | null} */ (
+    document.getElementById("login-form")
+  );
+  const button = /** @type {HTMLButtonElement | null} */ (
+    document.getElementById("login-submit")
+  );
+  const errorEl = /** @type {HTMLElement | null} */ (
+    document.getElementById("login-error")
+  );
+
+  if (!form || !button || !errorEl) {
+    // Incomplete DOM (should not happen in SSR); abort silently.
+  } else {
+    function getCookie(name) {
+      const m = document.cookie.match(
+        new RegExp("(?:^|; )" + name + "=([^;]*)"),
+      );
+      return m ? decodeURIComponent(m[1]) : "";
+    }
+
+    async function ensureCsrf() {
+      let token = getCookie("csrftoken");
+      if (!token) {
+        await fetch("/api/auth/csrf/", { credentials: "include" });
+        token = getCookie("csrftoken");
+      }
+      // Fallback to the data-attr in case the cookie was blocked.
+      if (!token) {
+        const fromAttr = form.getAttribute("data-csrf-token");
+        if (fromAttr) token = fromAttr;
+      }
+      return token;
+    }
+
+    function showError(msg) {
+      errorEl.textContent = msg;
+      errorEl.classList.remove("hidden");
+    }
+
+    function hideError() {
+      errorEl.textContent = "";
+      errorEl.classList.add("hidden");
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      hideError();
+      button.disabled = true;
+      button.textContent = submittingLabel;
+      try {
+        const csrf = await ensureCsrf();
+        const data = new FormData(form);
+        const email = String(data.get("email") ?? "").trim();
+        const password = String(data.get("password") ?? "");
+        if (!email || !password) {
+          showError(wrongCredentialsMsg);
+          return;
+        }
+        const res = await fetch("/api/auth/login/", {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrf,
+          },
+          body: JSON.stringify({ email, password }),
+        });
+        if (res.ok) {
+          // Full-reload navigation so the dashboard SSR sees the cookie.
+          window.location.href = "/dashboard/";
+          return;
+        }
+        if (res.status === 429) {
+          showError(tooManyAttemptsMsg);
+          return;
+        }
+        if (res.status === 400 || res.status === 401 || res.status === 403) {
+          showError(wrongCredentialsMsg);
+          return;
+        }
+        showError(errorGenericMsg);
+      } catch (_err) {
+        showError(errorGenericMsg);
+      } finally {
+        button.disabled = false;
+        button.textContent = submitLabel;
+      }
+    });
+  }
+</script>

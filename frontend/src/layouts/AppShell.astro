@@ -1,0 +1,48 @@
+---
+/**
+ * AppShell — authenticated layout.
+ *
+ * Does NOT do an auth check (each page passes the user as a prop). This avoids streaming
+ * problems where `Astro.redirect()` from a parent `.astro` component does not
+ * close the response correctly.
+ */
+import Layout from "./Layout.astro";
+import TopBar from "../components/shell/TopBar.astro";
+import SideNav from "../components/shell/SideNav.astro";
+import ToastContainer from "../components/shell/ToastContainer";
+import { t } from "../i18n";
+import { getMediaUrl } from "../lib/media";
+import type { User, Lang } from "../types";
+
+interface Props {
+  user: User;
+  lang: Lang;
+  title?: string;
+  description?: string;
+}
+
+const { user, lang, title, description } = Astro.props;
+const userName = user.first_name || user.email;
+// Current brand: custom sidebar name or the app default.
+const brandName = (user.sidebar_name ?? "").trim() || t(lang, "shell.app_name");
+// <title> of all pages: "<Page> · <brand>".
+const fullTitle = title ? `${title} · ${brandName}` : brandName;
+---
+
+<Layout title={fullTitle} variant="app" description={description}>
+  <div class="flex flex-col md:flex-row min-h-screen bg-bg">
+    <SideNav lang={lang} user={user} />
+    <div class="flex-1 min-w-0 flex flex-col">
+      <TopBar
+        lang={lang}
+        userName={userName}
+        avatarUrl={getMediaUrl(user.avatar) || null}
+        brandName={brandName}
+      />
+      <main class="mx-auto w-full max-w-6xl flex-1 px-6 py-6">
+        <slot />
+      </main>
+    </div>
+  </div>
+  <ToastContainer client:load lang={lang} />
+</Layout>

@@ -1,0 +1,90 @@
+---
+/**
+ * /register — registration of the first account.
+ *
+ * - SSR: if there is already an active session, redirects to /dashboard/ (or to /welcome/ if the welcome is pending).
+ * - Queries `GET /api/auth/registration-status/`: with `can_register` shows the real
+ *   form (RegisterForm); otherwise, the "registration closed" message + link to login. If the backend
+ *   does not respond, the message is "Could not connect to the server" (not "closed").
+ *   The backend decides: `can_register` is true only with no users or with ALLOW_REGISTRATION.
+ * - After registering, the form leads to /welcome/ (language, theme and color).
+ */
+export const prerender = false;
+
+import Layout from "../layouts/Layout.astro";
+import { meSSR, needsOnboarding, readLangCookie, registrationStatusSSR } from "../lib/auth-server";
+import LangSwitcher from "../components/shell/LangSwitcher";
+import RegisterForm from "../components/auth/RegisterForm";
+import Logo from "../components/ui/Logo";
+import { t } from "../i18n";
+
+const user = await meSSR(Astro);
+if (user) return Astro.redirect(needsOnboarding(user) ? "/welcome/" : "/dashboard/");
+
+const { can_register: canRegister, error: statusError } = await registrationStatusSSR(Astro);
+
+const lang = readLangCookie(Astro);
+const appName = t(lang, "shell.app_name");
+const title = t(lang, "auth.register_title");
+// Backend down or erroring: connection message, not "registration closed".
+const registerClosedMsg = t(lang, statusError ? "auth.register_unavailable" : "auth.register_closed");
+const haveAccount = t(lang, "auth.have_account");
+const loginTitle = t(lang, "auth.login_title");
+const subtitle = t(lang, "auth.register_subtitle");
+---
+
+<Layout title={`${title} · ${appName}`} variant="auth">
+  <div class="fixed right-4 top-4 z-10">
+    <LangSwitcher client:load lang={lang} mode="anonymous" />
+  </div>
+  <main class="min-h-screen flex items-center justify-center px-6 py-12">
+    {
+      canRegister ? (
+        <div class="neo-card w-full max-w-md p-6">
+          <div class="mb-4 flex justify-center">
+            <Logo size={48} />
+          </div>
+          <header class="mb-6 text-center">
+            <h1 class="text-xl font-semibold">{title}</h1>
+            <p class="mt-1 text-sm text-fg-muted">{subtitle}</p>
+          </header>
+
+          <RegisterForm client:load lang={lang} />
+
+          <p class="mt-6 text-center text-sm text-fg-muted">
+            {haveAccount}
+            <a href="/login/" class="ml-1 font-medium text-fg underline underline-offset-2">
+              {loginTitle}
+            </a>
+          </p>
+        </div>
+      ) : (
+        <div class="neo-card w-full max-w-md p-6 text-center">
+          <div class="mb-4 flex justify-center">
+            <Logo size={48} />
+          </div>
+          <h1 class="text-xl font-semibold">{title}</h1>
+
+          <div
+            class="mt-6 rounded-md border border-border bg-secondary px-4 py-3 text-left text-sm font-medium"
+            role="status"
+            aria-live="polite"
+          >
+            {registerClosedMsg}
+          </div>
+
+          <p class="mt-6 text-sm text-fg-muted">
+            {haveAccount}
+            <a href="/login/" class="ml-1 font-medium text-fg underline underline-offset-2">
+              {loginTitle}
+            </a>
+          </p>
+
+          <a href="/login/" class="neo-btn neo-btn-primary mt-6 inline-flex">
+            {loginTitle}
+          </a>
+        </div>
+      )
+    }
+  </main>
+</Layout>

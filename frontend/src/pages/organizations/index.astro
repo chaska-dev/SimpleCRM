@@ -1,0 +1,21 @@
+---
+/**
+ * /organizations — list of organizations (grid of cards with filters).
+ * The logic lives in the React island `OrganizationsListView` (client:load).
+ */
+export const prerender = false;
+
+import AppShell from "../../layouts/AppShell.astro";
+import OrganizationsListView from "../../components/organizations/OrganizationsListView";
+import { meSSR, needsOnboarding, readLangCookie } from "../../lib/auth-server";
+import { t } from "../../i18n";
+
+const user = await meSSR(Astro);
+if (!user) return Astro.redirect("/login/");
+if (needsOnboarding(user)) return Astro.redirect("/welcome/");
+const lang = readLangCookie(Astro);
+---
+
+<AppShell user={user} lang={lang} title={t(lang, "organization.title")}>
+  <OrganizationsListView client:load lang={lang} />
+</AppShell>

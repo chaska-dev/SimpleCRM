@@ -1,0 +1,39 @@
+{
+  "brand": "Simple CRM",
+  "tagline": "Tus relaciones, con calma",
+  "brief": "Gestor personal de relaciones: personas, cumpleanos, recordatorios, reuniones e instituciones, con datos cifrados y agentes de IA opcionales. Debe sentirse cercano, ordenado, confiable, sereno y privado.",
+  "adjectives": ["cercano", "ordenado", "confiable", "sereno", "privado"],
+  "criteria": "Exito: distinto de los CRM de contactos (sin siluetas, libretas ni burbujas), legible a 16 px, funciona en un solo color y en tema claro y oscuro.",
+  "industry": "software",
+  "mockups": ["favicon-tab", "app-icon", "website", "social", "readme", "terminal"],
+  "nav": ["Personas", "Recordatorios", "Reuniones"],
+  "brand_color": "#db2777",
+  "greyscale": false,
+  "final": true,
+  "deck_title": "identidad final",
+  "label": "Circulos",
+  "designer": "",
+  "concepts": [
+    {
+      "name": "Circulos",
+      "symbol": "../masters/symbol.svg",
+      "avatar": "../web-icons/favicon.svg",
+      "lockup": "../lockup-horizontal-mono-db2777.svg",
+      "stacked": "../lockup-stacked-mono-db2777.svg",
+      "symbol_on_tile": "../symbol-white.svg",
+      "stacked_on_tile": "../lockup-stacked-white.svg",
+      "lockup_on_tile": "../lockup-horizontal-white.svg",
+      "symbol_on_dark": "../symbol-mono-db2777.svg",
+      "lockup_on_dark": "../masters/lockup-horizontal-pink-thin.svg",
+      "stacked_on_dark": "../masters/lockup-stacked-pink-thin.svg",
+      "idea": "Anillos que comparten el mismo suelo alrededor de un nucleo protegido: los circulos de cercania.",
+      "rationale": [
+        "Cercano y privado: el nucleo esta dentro de capas de confianza",
+        "Ordenado y sereno: geometria de circulos concentricos, sin ornamento",
+        "Recorte pequeno (anillo + nucleo) para 16-24 px; version invertida adelgazada"
+      ]
+    }
+  ],
+  "recommendation": "Usar el simbolo completo desde 32 px y el recorte pequeno por debajo; en la app el simbolo hereda el color de acento (currentColor).",
+  "next_steps": ["Integrar favicon, manifest y simbolo currentColor en la app", "Busqueda de marca antes del lanzamiento publico"]
+}

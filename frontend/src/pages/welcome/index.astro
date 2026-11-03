@@ -1,0 +1,38 @@
+---
+/**
+ * /welcome — welcome on first sign-in.
+ *
+ * - No session -> /login/. With the welcome already completed -> /dashboard/.
+ * - There is no middleware: each authenticated page (and /login, /register, /) redirects here
+ *   with `needsOnboarding(user)` when `onboarding_completed=false`.
+ * - Auth layout: centered, `max-w-lg`. The island loads both dictionaries and
+ *   switches the language on the client without reloading.
+ */
+export const prerender = false;
+
+import Layout from "../../layouts/Layout.astro";
+import WelcomeView from "../../components/welcome/WelcomeView";
+import ToastContainer from "../../components/shell/ToastContainer";
+import { meSSR, needsOnboarding, readLangCookie } from "../../lib/auth-server";
+import { t } from "../../i18n";
+
+const user = await meSSR(Astro);
+if (!user) return Astro.redirect("/login/");
+if (!needsOnboarding(user)) return Astro.redirect("/dashboard/");
+
+const lang = readLangCookie(Astro);
+const prefs = Astro.locals.prefs;
+const appName = t(lang, "shell.app_name");
+---
+
+<Layout title={`${t(lang, "welcome.title")} · ${appName}`} variant="auth">
+  <main class="flex min-h-screen items-center justify-center px-6 py-12">
+    <WelcomeView
+      client:load
+      initialLang={lang}
+      initialTheme={prefs?.theme ?? "dark"}
+      initialAccent={prefs?.accent ?? "#db2777"}
+    />
+  </main>
+  <ToastContainer client:load lang={lang} />
+</Layout>

@@ -1,0 +1,172 @@
+# Full CRM stack: Postgres 16 + Django/uvicorn backend (+ /mcp/) + Astro SSR frontend
+# + Caddy proxy (the only public entry point).
+#
+# DEVELOPMENT (unchanged): only the database; Django with runserver and Astro with dev
+# run outside Docker.
+#   docker compose up -d db      (the DB is exposed on 127.0.0.1:5433 via docker-compose.override.yml)
+#
+# FULL STACK (see docs/configuration.md):
+#   python scripts/generate-secrets.py                      # creates .env.docker (once)
+#   docker compose --env-file .env.docker up -d --build     # opens http://127.0.0.1:8080
+#
+# Isolated from development/CI: `-f docker-compose.yml` ignores the override (no published
+# DB port) and `-p <other-name>` + your own PGDATA_VOLUME / DB_CONTAINER_NAME avoid touching
+# the development `crm-db` container and `crm_pgdata` volume.
+#
+# Secrets arrive through --env-file (interpolation variables of this file); there are no
+# secret values in the repo. The backend does NOT start with DEBUG=False if any is missing.
+name: crm
+
+x-hardening: &hardening
+  restart: unless-stopped
+  security_opt:
+    - no-new-privileges:true
+  cap_drop:
+    - ALL
+
+services:
+  db:
+    <<: *hardening
+    image: postgres:16-alpine
+    # Fixed name and volume by default to keep the development data.
+    container_name: ${DB_CONTAINER_NAME:-crm-db}
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-crm}
+      POSTGRES_USER: ${POSTGRES_USER:-crm}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      # Only affects a new volume (initdb): scram-sha-256 authentication for TCP.
+      POSTGRES_INITDB_ARGS: --auth-host=scram-sha-256
+    volumes:
+      - crm_pgdata:/var/lib/postgresql/data
+    # No `ports`: Postgres is not published. For local development it is published only on
+    # loopback from docker-compose.override.yml (127.0.0.1:5433), never on 0.0.0.0.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-crm} -d ${POSTGRES_DB:-crm}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - internal
+    # Postgres starts as root and drops to postgres: only these capabilities (the rest are dropped).
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
+
+  backend:
+    <<: *hardening
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: crm-backend:${IMAGE_TAG:-local}
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DEBUG: "False"
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-}
+      FIELD_ENCRYPTION_KEYS: ${FIELD_ENCRYPTION_KEYS:-}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,backend}
+      CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS:-http://127.0.0.1:8080,http://localhost:8080}
+      USE_HTTPS: ${USE_HTTPS:-False}
+      ALLOW_REGISTRATION: ${ALLOW_REGISTRATION:-False}
+      TRUST_PROXY_SSL_HEADER: "True"
+      SESSION_COOKIE_AGE: ${SESSION_COOKIE_AGE:-1209600}
+      # Public MCP URL for the UI (empty = browser origin). See .env.docker.example.
+      MCP_PUBLIC_URL: ${MCP_PUBLIC_URL:-}
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_NAME: ${POSTGRES_DB:-crm}
+      DB_USER: ${POSTGRES_USER:-crm}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      # Rate limit counters shared between the uvicorn workers.
+      CACHE_URL: filecache:///tmp/crm_cache
+      UVICORN_WORKERS: ${UVICORN_WORKERS:-2}
+    volumes:
+      # Uploaded files (icons, avatars, logos and encrypted attachments). Backend only.
+      - media:/app/media
+    tmpfs:
+      - /tmp
+    read_only: true
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/api/health/', timeout=4).status == 200 else 1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 40s
+    networks:
+      - internal
+
+  frontend:
+    <<: *hardening
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: crm-frontend:${IMAGE_TAG:-local}
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      API_INTERNAL_URL: http://backend:8000
+      HOST: 0.0.0.0
+      PORT: "4321"
+    read_only: true
+    tmpfs:
+      - /tmp
+    healthcheck:
+      # TCP to the port: a real page would trigger an SSR call to the backend on every check.
+      test: ["CMD", "node", "-e", "require('net').connect(4321,'127.0.0.1').on('connect',()=>process.exit(0)).on('error',()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
+    networks:
+      - internal
+
+  proxy:
+    <<: *hardening
+    image: caddy:2-alpine
+    depends_on:
+      backend:
+        condition: service_healthy
+      frontend:
+        condition: service_healthy
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-:80}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    ports:
+      # The only service with a published port. Loopback only by default; to expose it on
+      # the network change to "0.0.0.0:${APP_PORT:-8080}:80" (and publish 443 too for TLS).
+      - "127.0.0.1:${APP_PORT:-8080}:80"
+    # Caddy needs to bind 80/443 inside the container.
+    cap_add:
+      - NET_BIND_SERVICE
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:2019/config/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
+    networks:
+      - internal
+      - edge
+
+networks:
+  # Internal network with no Internet access: db, backend and frontend only talk to each other.
+  internal:
+    internal: true
+  # The proxy also lives here (port publishing and, with a domain, ACME).
+  edge: {}
+
+volumes:
+  # Fixed (configurable) name so the development data is not lost.
+  crm_pgdata:
+    name: ${PGDATA_VOLUME:-crm_pgdata}
+  media:
+  caddy_data:
+  caddy_config:

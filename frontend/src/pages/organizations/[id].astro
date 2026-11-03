@@ -1,0 +1,25 @@
+---
+/**
+ * /organizations/[id] — organization detail with tabs
+ * (Information / People / Photos and files). The React component does the
+ * client-side fetch and handles 404 (redirect to /organizations/).
+ */
+export const prerender = false;
+
+import AppShell from "../../layouts/AppShell.astro";
+import OrganizationDetailView from "../../components/organizations/OrganizationDetailView";
+import { meSSR, needsOnboarding, readLangCookie } from "../../lib/auth-server";
+import { t } from "../../i18n";
+
+const user = await meSSR(Astro);
+if (!user) return Astro.redirect("/login/");
+if (needsOnboarding(user)) return Astro.redirect("/welcome/");
+
+const lang = readLangCookie(Astro);
+const { id } = Astro.params;
+if (!id) return Astro.redirect("/organizations/");
+---
+
+<AppShell user={user} lang={lang} title={t(lang, "organization.title_singular")}>
+  <OrganizationDetailView client:load organizationId={String(id)} initialLang={lang} />
+</AppShell>

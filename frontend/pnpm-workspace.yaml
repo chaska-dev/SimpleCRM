@@ -1,0 +1,5 @@
+# Build scripts allowlist: only the packages that need them (esbuild: postinstall
+# that links the native binary; sharp: install that verifies/compiles libvips).
+onlyBuiltDependencies:
+  - esbuild
+  - sharp

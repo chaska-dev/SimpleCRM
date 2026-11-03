@@ -1,0 +1,42 @@
+---
+import "@fontsource-variable/inter";
+import "../styles/global.css";
+import NoFOUC from "../components/shell/NoFOUC.astro";
+import { accentForeground } from "../styles/themes";
+import { resolvePrefs } from "../lib/auth-server";
+
+interface Props {
+  title?: string;
+  /** "og"/"auth"/"app" pattern — useful for data-attribute and style selection. */
+  variant?: "app" | "auth" | "og";
+  description?: string;
+}
+
+const { title = "SimpleCRM", variant = "app", description } = Astro.props;
+
+// Language, theme and accent: `meSSR` leaves them in `locals.prefs` (user > cookie >
+// Accept-Language/defaults); without a session they are resolved here from the request. SSR
+// paints them on <html> so there is no flicker or different hydration.
+const prefs = Astro.locals.prefs ?? resolvePrefs(Astro, Astro.locals.user ?? null);
+const accentStyle = `--accent-base:${prefs.accent};--accent-fg:${accentForeground(prefs.accent)}`;
+---
+
+<!doctype html>
+<html lang={prefs.lang} data-theme={prefs.theme} style={accentStyle}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="generator" content={Astro.generator} />
+    {description && <meta name="description" content={description} />}
+    <link rel="icon" href="/brand/favicon.ico" sizes="48x48" />
+    <link rel="icon" href="/brand/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png" />
+    <link rel="manifest" href="/brand/site.webmanifest" />
+    <meta name="theme-color" content={prefs.accent} />
+    <NoFOUC />
+    <title>{title}</title>
+  </head>
+  <body data-variant={variant} class="min-h-screen bg-bg text-fg">
+    <slot />
+  </body>
+</html>

@@ -1,0 +1,16 @@
+/*
+ * Skeleton loading styles.
+ *
+ * The Tailwind `animate-pulse` does an opacity oscillation 1 ↔ 0.5.
+ * It is soft by design — it works well with bg-muted and thick borders because
+ * the block is still clearly "a block", only the emphasis changes.
+ *
+ * Accessibility: respect prefers-reduced-motion to turn the animation off.
+ * The skeleton stays visible (it is not hidden) — only the movement is removed.
+ */
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse {
+    animation: none !important;
+  }
+}

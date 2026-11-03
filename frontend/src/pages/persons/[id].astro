@@ -1,0 +1,29 @@
+---
+/**
+ * /persons/[id] — detail view with 5 tabs (Contact / Interactions /
+ * Notes / Dates & Reminders / Attachments). The React component does the
+ * client-side fetch and handles 404 (redirect to /persons/) / loading / error.
+ */
+export const prerender = false;
+
+import AppShell from "../../layouts/AppShell.astro";
+import PersonDetailView from "../../components/persons/detail/PersonDetailView";
+import { meSSR, needsOnboarding, readLangCookie } from "../../lib/auth-server";
+import { t } from "../../i18n";
+
+const user = await meSSR(Astro);
+if (!user) return Astro.redirect("/login/");
+if (needsOnboarding(user)) return Astro.redirect("/welcome/");
+
+const lang = readLangCookie(Astro);
+const { id } = Astro.params;
+if (!id) return Astro.redirect("/persons/");
+---
+
+<AppShell user={user} lang={lang} title={t(lang, "person.title_singular")}>
+  <PersonDetailView
+    client:load
+    personId={String(id)}
+    initialLang={lang}
+  />
+</AppShell>

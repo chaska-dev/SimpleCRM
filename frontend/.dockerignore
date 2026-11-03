@@ -1,0 +1,15 @@
+node_modules
+dist
+.astro
+.env
+.env.*
+!.env.example
+media
+__pycache__
+*.log
+.git
+.gitignore
+.idea
+.vscode
+Dockerfile
+.dockerignore

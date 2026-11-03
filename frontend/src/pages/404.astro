@@ -1,0 +1,46 @@
+---
+/**
+ * /404 — "Not found" page.
+ *
+ * Astro serves it as the fallback for any route that does not match; the language
+ * comes from `readLangCookie` (user > cookie > Accept-Language, via `locals.prefs`). variant="og" so the Layout does not inject app/auth chrome.
+ *
+ * Look: large 404 number, centered card, accent CTA that goes back to the
+ * dashboard.
+ */
+import Layout from "../layouts/Layout.astro";
+import { readLangCookie } from "../lib/auth-server";
+import Logo from "../components/ui/Logo";
+import { t } from "../i18n";
+
+const lang = readLangCookie(Astro);
+const appName = t(lang, "shell.app_name");
+---
+
+<Layout title={`404 · ${appName}`} variant="og">
+  <main class="min-h-screen flex items-center justify-center px-6 py-12">
+    <div class="neo-card w-full max-w-md p-6 text-center">
+      <div class="mb-3 flex justify-center">
+        <Logo size={24} />
+      </div>
+      <p
+        class="text-4xl font-semibold leading-none"
+        aria-hidden="true"
+      >
+        404
+      </p>
+
+      <h1 class="mt-4 text-xl font-semibold">
+        {t(lang, "errors.404_title")}
+      </h1>
+
+      <p class="mt-2 text-sm text-fg-muted">
+        {t(lang, "errors.404_body")}
+      </p>
+
+      <a href="/dashboard/" class="neo-btn neo-btn-primary mt-6 inline-flex">
+        {t(lang, "errors.back_home")}
+      </a>
+    </div>
+  </main>
+</Layout>

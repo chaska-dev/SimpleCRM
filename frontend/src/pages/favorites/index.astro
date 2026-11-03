@@ -1,0 +1,31 @@
+---
+/**
+ * /favorites — list of people marked as favorites.
+ *
+ * Reuses the list logic (search + tag + sort + grid/list) but with the
+ * `?favorite=true` filter pre-applied on the backend side (index
+ * crm_person_owner_i_f7246b_idx). Client-side filters the cadence multi-select
+ * the same as /persons/.
+ */
+export const prerender = false;
+
+import AppShell from "../../layouts/AppShell.astro";
+import PersonsListView from "../../components/persons/PersonsListView";
+import { meSSR, needsOnboarding, readLangCookie } from "../../lib/auth-server";
+import { t } from "../../i18n";
+
+const user = await meSSR(Astro);
+if (!user) return Astro.redirect("/login/");
+if (needsOnboarding(user)) return Astro.redirect("/welcome/");
+
+const lang = readLangCookie(Astro);
+---
+
+<AppShell user={user} lang={lang} title={t(lang, "person.favorites_title")}>
+  <PersonsListView
+    client:load
+    lang={lang}
+    initialFavoriteFilter={true}
+    title={t(lang, "person.favorites_title")}
+  />
+</AppShell>

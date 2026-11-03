@@ -1,0 +1,24 @@
+---
+/**
+ * /reminders — flat list of reminders with tabs (Pending/Completed/All),
+ * filter by person, and CRUD (create, edit, complete, delete).
+ *
+ * The shell (AppShell) provides auth + lang. The logic lives in the React island
+ * `RemindersView` (client:load) because it depends on fetch + interactive state.
+ */
+export const prerender = false;
+
+import AppShell from "../../layouts/AppShell.astro";
+import RemindersView from "../../components/reminders/RemindersView";
+import { meSSR, needsOnboarding, readLangCookie } from "../../lib/auth-server";
+import { t } from "../../i18n";
+
+const user = await meSSR(Astro);
+if (!user) return Astro.redirect("/login/");
+if (needsOnboarding(user)) return Astro.redirect("/welcome/");
+const lang = readLangCookie(Astro);
+---
+
+<AppShell user={user} lang={lang} title={t(lang, "reminder.title")}>
+  <RemindersView client:load lang={lang} />
+</AppShell>

@@ -1,0 +1,24 @@
+# No data, secrets or local artifacts inside the image.
+.venv
+venv
+env
+__pycache__
+*.pyc
+*.pyo
+.env
+.env.*
+!.env.example
+media
+staticfiles
+db.sqlite3
+*.sqlite3
+.git
+.gitignore
+.idea
+.vscode
+.pytest_cache
+.mypy_cache
+*.log
+scripts
+Dockerfile
+.dockerignore

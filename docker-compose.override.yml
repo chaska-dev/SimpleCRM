@@ -1,0 +1,17 @@
+# Loaded automatically by `docker compose up` (not with `-f docker-compose.yml`).
+# Local development: publishes Postgres ONLY on loopback (127.0.0.1:5433), never on 0.0.0.0.
+# If 5433 is taken, change the first number and update DB_PORT in backend/.env.
+# For a deployment without this port: `docker compose -f docker-compose.yml ...`.
+services:
+  db:
+    ports:
+      - "127.0.0.1:5433:5432"
+    # Docker does not forward published ports of containers connected ONLY to
+    # `internal: true` networks. So, in development only, db also joins a regular
+    # network (dev_host); it stays on `internal` to talk to backend/frontend.
+    networks:
+      - internal
+      - dev_host
+
+networks:
+  dev_host: {}

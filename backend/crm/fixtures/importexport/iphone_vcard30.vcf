@@ -1,0 +1,37 @@
+BEGIN:VCARD
+VERSION:3.0
+PRODID:-//Apple Inc.//iOS 17.5//EN
+N:Valdivia Rojas;Marta Elena;;;
+FN:Marta Elena Valdivia Rojas
+NICKNAME:Mati
+ORG:Panadería La Espiga;
+TITLE:Gerente
+item1.EMAIL;type=INTERNET;type=pref:marta.valdivia@example.test
+item1.X-ABLabel:_$!<Other>!$_
+EMAIL;type=INTERNET;type=WORK:mvaldivia@laespiga.example.test
+TEL;type=CELL;type=VOICE;type=pref:+51 987 000 111
+TEL;type=WORK;type=VOICE:+51 1 555 0199
+item2.URL;type=pref:https://www.linkedin.com/in/marta-valdivia-test
+item2.X-ABLabel:_$!<HomePage>!$_
+item3.URL:https://www.facebook.com/marta.valdivia.test
+item3.X-ABLabel:Facebook
+X-SOCIALPROFILE;type=twitter;x-user=martaval:x-apple:martaval
+ADR;type=HOME;type=pref:;;Av. Primavera 45;Surco;;15023;Perú
+NOTE:Cumple con panadería\nPrefiere pan integral\, sin sal.
+BDAY:1604-03-15
+CATEGORIES:Familia,Trabajo
+PHOTO;ENCODING=b;TYPE=JPEG:/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAMCAgMCAgMDAwME
+END:VCARD
+BEGIN:VCARD
+VERSION:3.0
+N:Cárdenas;Diego;;;
+FN:Diego Cárdenas
+TEL;type=CELL:+57 300 555 0142
+BDAY:1991-02-14
+END:VCARD
+BEGIN:VCARD
+VERSION:3.0
+N:Soto;Elena;;;
+FN:Elena Soto
+BDAY;X-APPLE-OMIT-YEAR=1604:1604-12-24
+END:VCARD

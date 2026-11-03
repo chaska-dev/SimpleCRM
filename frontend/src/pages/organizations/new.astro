@@ -1,0 +1,29 @@
+---
+/**
+ * /organizations/new — organization creation form.
+ * SSR preloads the tags for the selector (if it fails, falls back to []).
+ */
+export const prerender = false;
+
+import AppShell from "../../layouts/AppShell.astro";
+import OrganizationCreateForm from "../../components/organizations/OrganizationCreateForm";
+import { meSSR, needsOnboarding, readLangCookie } from "../../lib/auth-server";
+import { t } from "../../i18n";
+import { apiFetch } from "../../lib/api";
+import type { Tag } from "../../types";
+
+const user = await meSSR(Astro);
+if (!user) return Astro.redirect("/login/");
+if (needsOnboarding(user)) return Astro.redirect("/welcome/");
+
+const lang = readLangCookie(Astro);
+
+const cookieHeader = Astro.request.headers.get("cookie") || "";
+const tags = await apiFetch<Tag[]>("/api/tags/", {
+  headers: { Cookie: cookieHeader },
+}).catch(() => [] as Tag[]);
+---
+
+<AppShell user={user} lang={lang} title={t(lang, "organization.form.new_title")}>
+  <OrganizationCreateForm client:load lang={lang} existingTags={tags} />
+</AppShell>

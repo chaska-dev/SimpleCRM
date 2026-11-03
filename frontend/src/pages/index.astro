@@ -1,0 +1,15 @@
+---
+/**
+ * / — entrypoint. Redirects based on auth.
+ *
+ * Logged in → /dashboard/ (home with calendar + recents). People are
+ * accessed from the sidebar at /persons/, favorites at /favorites/.
+ */
+export const prerender = false;
+
+import { meSSR, needsOnboarding } from "../lib/auth-server";
+
+const user = await meSSR(Astro);
+if (!user) return Astro.redirect("/login/");
+return Astro.redirect(needsOnboarding(user) ? "/welcome/" : "/dashboard/");
+---
