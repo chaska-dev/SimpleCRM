@@ -1,0 +1,534 @@
+---
+import Base from "../layouts/Base.astro";
+import Logo from "./Logo.astro";
+import {
+  APP_URL,
+  COPY,
+  INSTALL_COMMANDS,
+  INSTALL_LIST,
+  MCP_SNIPPETS,
+  MOBILE_SIZE,
+  REPO_URL,
+  SHOT_KEYS,
+  SHOT_SIZE,
+  type Lang,
+} from "../i18n/content";
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = COPY[lang];
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const homeHref = lang === "es" ? `${base}/` : `${base}/en/`;
+const shot = (key: string) => `${base}/screens/${lang}/${key}.webp`;
+const mshot = (key: string) => `${base}/screens/${lang}/m-${key}.webp`;
+const [peopleW, peopleH] = SHOT_SIZE.people;
+const [mW, mH] = MOBILE_SIZE;
+const MOBILE_MQ = "(max-width: 640px)";
+
+// Last word of the headline, in the lightened accent.
+const words = t.hero.h1.split(" ");
+const lastWord = words.pop();
+const headStart = words.join(" ");
+---
+
+<Base lang={lang} htmlLang={t.htmlLang} title={t.title} description={t.description}>
+  <a class="skip" href="#main">{lang === "es" ? "Saltar al contenido" : "Skip to content"}</a>
+
+  <header class="site-header">
+    <div class="container container-wide header-row">
+      <a class="brand" href={homeHref} aria-label="Simple CRM">
+        <Logo name="Simple CRM" />
+      </a>
+      <nav class="nav" aria-label={t.nav.label}>
+        <a href="#preview">{t.preview.tabs.home.label}</a>
+        <a href="#install">{t.nav.install}</a>
+        <a href="#features">{t.nav.features}</a>
+        <a href="#mcp">{t.nav.mcp}</a>
+      </nav>
+      <div class="header-actions">
+        <div class="lang-switch lang-header" role="group" aria-label={t.switchLabel}>
+          <a
+            href={`${base}/`}
+            hreflang="es"
+            lang="es"
+            aria-current={lang === "es" ? "true" : undefined}
+            aria-label="Español">ES</a
+          >
+          <a
+            href={`${base}/en/`}
+            hreflang="en"
+            lang="en"
+            aria-current={lang === "en" ? "true" : undefined}
+            aria-label="English">EN</a
+          >
+        </div>
+        <a class="btn btn-secondary btn-sm gh-header" href={REPO_URL}>{t.github}</a>
+        <button
+          type="button"
+          class="menu-btn"
+          aria-expanded="false"
+          aria-controls="menu-sheet"
+          aria-label={t.nav.menu}
+          data-open-label={t.nav.menu}
+          data-close-label={t.nav.close}
+        >
+          <span class="menu-bars" aria-hidden="true"></span>
+        </button>
+      </div>
+    </div>
+    <div class="menu-sheet" id="menu-sheet">
+      <div class="container container-wide">
+        <nav class="menu-links" aria-label={t.nav.label}>
+          <a href="#preview">{t.preview.tabs.home.label}</a>
+          <a href="#install">{t.nav.install}</a>
+          <a href="#features">{t.nav.features}</a>
+          <a href="#mcp">{t.nav.mcp}</a>
+        </nav>
+        <div class="menu-foot">
+          <div class="lang-switch" role="group" aria-label={t.switchLabel}>
+            <a
+              href={`${base}/`}
+              hreflang="es"
+              lang="es"
+              aria-current={lang === "es" ? "true" : undefined}
+              aria-label="Español">ES</a
+            >
+            <a
+              href={`${base}/en/`}
+              hreflang="en"
+              lang="en"
+              aria-current={lang === "en" ? "true" : undefined}
+              aria-label="English">EN</a
+            >
+          </div>
+          <a class="btn btn-primary" href={REPO_URL}>{t.github}</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero">
+      <div class="container container-wide">
+        <h1 class="rise" style="--i:0">{headStart} <span class="hl">{lastWord}</span></h1>
+        <p class="lead rise" style="--i:1">{t.hero.sub}</p>
+        <div class="hero-actions rise" style="--i:2">
+          <a class="btn btn-primary" href={REPO_URL}>{t.hero.cta}</a>
+          <a class="btn btn-secondary" href="#install">{t.hero.install}</a>
+          <span class="hero-note">{t.hero.note}</span>
+        </div>
+        <div class="hero-prints rise" style="--i:3">
+          <picture>
+            <source media={MOBILE_MQ} srcset={mshot("people")} width={mW} height={mH} type="image/webp" />
+            <img
+              class="print-front"
+              src={shot("people")}
+              width={peopleW}
+              height={peopleH}
+              alt={t.preview.tabs.people.alt}
+              fetchpriority="high"
+              decoding="async"
+            />
+          </picture>
+        </div>
+      </div>
+    </section>
+
+    <section class="section sheet-section" id="preview" aria-labelledby="preview-h">
+      <div class="container container-wide">
+        <div class="section-head reveal">
+          <h2 id="preview-h">{t.preview.h2}</h2>
+          <p>{t.preview.intro}</p>
+        </div>
+
+        <div class="sheet" data-tabs data-digits>
+          <div class="strip reveal">
+            <div class="strip-scroll">
+              <div role="tablist" class="strip-film" aria-label={t.preview.h2}>
+                {
+                  SHOT_KEYS.map((key, i) => (
+                    <button
+                      type="button"
+                      role="tab"
+                      class="frame"
+                      id={`tab-shot-${key}`}
+                      aria-controls={`panel-shot-${key}`}
+                      aria-selected={i === 0 ? "true" : "false"}
+                      tabindex={i === 0 ? 0 : -1}
+                    >
+                      <span class="frame-no" aria-hidden="true">
+                        {i + 1}
+                        <svg class="pen" viewBox="0 0 60 40" focusable="false">
+                          <path d="M8 22C6 11 20 4 33 5c15 1 25 8 22 18-3 11-19 15-33 12C12 33 5 29 6 21c.5-5 5-9 11-12" />
+                        </svg>
+                      </span>
+                      <picture>
+                        <source media={MOBILE_MQ} srcset={mshot(key)} width={mW} height={mH} type="image/webp" />
+                        <img src={shot(key)} width="2880" height="1800" alt="" loading="lazy" decoding="async" />
+                      </picture>
+                      <span class="frame-label">{t.preview.tabs[key].label}</span>
+                    </button>
+                  ))
+                }
+              </div>
+            </div>
+            <p class="strip-hint">{t.preview.hint}</p>
+          </div>
+
+          {
+            SHOT_KEYS.map((key, i) => {
+              const [w, h] = SHOT_SIZE[key];
+              return (
+                <div
+                  role="tabpanel"
+                  id={`panel-shot-${key}`}
+                  aria-labelledby={`tab-shot-${key}`}
+                  class={i === 0 ? "panel is-active" : "panel"}
+                >
+                  <figure class="print">
+                    <picture>
+                      <source media={MOBILE_MQ} srcset={mshot(key)} width={mW} height={mH} type="image/webp" />
+                      <img src={shot(key)} width={w} height={h} alt={t.preview.tabs[key].alt} loading="lazy" decoding="async" />
+                    </picture>
+                    <figcaption>{t.preview.tabs[key].caption}</figcaption>
+                  </figure>
+                </div>
+              );
+            })
+          }
+        </div>
+      </div>
+    </section>
+
+    <section class="band" id="install" aria-labelledby="install-h">
+      <div class="container container-wide band-grid">
+        <div class="band-copy">
+          <h2 id="install-h" class="reveal">{t.install.h2}</h2>
+          <p class="band-intro reveal" style="--i:1">{t.install.intro}</p>
+          <h3 class="band-sub reveal" style="--i:2">{t.install.stepsTitle}</h3>
+          <ol class="band-steps">
+            {
+              t.install.steps.map((s, i) => (
+                <li class="reveal" style={`--i:${i + 3}`}>
+                  <h4>{s.title}</h4>
+                  <p>{s.text}</p>
+                </li>
+              ))
+            }
+          </ol>
+        </div>
+        <div class="band-code reveal" style="--i:2">
+          <div class="code-block code-on-band">
+            <div class="code-head">
+              <span class="code-lang">bash</span>
+              <button
+                type="button"
+                class="copy"
+                data-copy-text={INSTALL_COMMANDS}
+                data-label={t.install.copy}
+                data-done={t.install.copied}
+              >
+                <span aria-live="polite">{t.install.copy}</span>
+              </button>
+            </div>
+            <div class="cmds" id="install-code">
+              {
+                INSTALL_LIST.map((cmd) => (
+                  <div class="cmd">
+                    <code class="cmd-text">{cmd}</code>
+                    <button
+                      type="button"
+                      class="copy copy-line"
+                      data-copy-text={cmd}
+                      data-label={t.install.copy}
+                      data-done={t.install.copied}
+                      aria-label={`${t.install.copyLine}: ${cmd}`}
+                    >
+                      <span aria-hidden="true">{t.install.copy}</span>
+                    </button>
+                  </div>
+                ))
+              }
+            </div>
+          </div>
+          <p class="after-code">
+            {t.install.after} <code>{APP_URL}</code> {t.install.registerNote} <code>/register/</code>.
+          </p>
+          <p class="band-note">{t.install.backupNote}</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="features" aria-labelledby="features-h">
+      <div class="container container-wide ledger-grid">
+        <div class="ledger-head">
+          <h2 id="features-h" class="reveal">{t.features.h2}</h2>
+        </div>
+        <ul class="ledger">
+          {
+            t.features.items.map((f, i) => (
+              <li class="reveal" style={`--i:${i % 4}`}>
+                <h3>{f.title}</h3>
+                <p>{f.text}</p>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </section>
+
+    <section class="section mcp" id="mcp" aria-labelledby="mcp-h">
+      <div class="container container-wide">
+        <div class="section-head reveal">
+          <h2 id="mcp-h">{t.mcp.h2}</h2>
+          <p>{t.mcp.intro}</p>
+        </div>
+        <div class="mcp-grid">
+          <ol class="mcp-steps">
+            {
+              t.mcp.steps.map((s, i) => (
+                <li class="reveal" style={`--i:${i}`}>
+                  <h4>{s.title}</h4>
+                  <p>{s.text}</p>
+                </li>
+              ))
+            }
+          </ol>
+          <div class="mcp-snippets reveal" style="--i:1">
+            <h3 class="snip-title">{t.mcp.snippetsTitle}</h3>
+            <div data-tabs>
+              <div class="tabs-scroll">
+                <div role="tablist" class="tablist" aria-label={t.mcp.snippetsTitle}>
+                  {
+                    MCP_SNIPPETS.map((s, i) => (
+                      <button
+                        type="button"
+                        role="tab"
+                        id={`tab-mcp-${s.key}`}
+                        aria-controls={`panel-mcp-${s.key}`}
+                        aria-selected={i === 0 ? "true" : "false"}
+                        tabindex={i === 0 ? 0 : -1}
+                      >
+                        {s.label}
+                      </button>
+                    ))
+                  }
+                </div>
+              </div>
+              {
+                MCP_SNIPPETS.map((s, i) => (
+                  <div
+                    role="tabpanel"
+                    id={`panel-mcp-${s.key}`}
+                    aria-labelledby={`tab-mcp-${s.key}`}
+                    class={i === 0 ? "panel is-active" : "panel"}
+                  >
+                    <div class="code-block">
+                      <div class="code-head">
+                        <span class="code-lang">{s.label}</span>
+                        <button
+                          type="button"
+                          class="copy"
+                          data-copy={`#code-mcp-${s.key}`}
+                          data-label={t.mcp.copy}
+                          data-done={t.mcp.copied}
+                        >
+                          <span aria-live="polite">{t.mcp.copy}</span>
+                        </button>
+                      </div>
+                      <pre id={`code-mcp-${s.key}`} tabindex="0"><code>{s.code}</code></pre>
+                    </div>
+                  </div>
+                ))
+              }
+            </div>
+            <p class="note">{t.mcp.snippetsNote}</p>
+            <p class="note">{t.mcp.lanNote}</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section transfer-section" id="transfer" aria-labelledby="transfer-h">
+      <div class="container container-wide">
+        <div class="section-head reveal">
+          <h2 id="transfer-h">{t.transfer.h2}</h2>
+          <p>{t.transfer.intro}</p>
+        </div>
+        <div class="transfer">
+          <div class="reveal">
+            <h3>{t.transfer.importTitle}</h3>
+            <p>{t.transfer.importText}</p>
+          </div>
+          <div class="reveal" style="--i:1">
+            <h3>{t.transfer.exportTitle}</h3>
+            <p>{t.transfer.exportText}</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container container-wide">
+      <div class="close">
+        <a class="btn btn-primary" href={REPO_URL}>{t.github}</a>
+        <a class="btn btn-secondary" href="#install">{t.hero.install}</a>
+      </div>
+      <div class="footer-mark" aria-hidden="true">
+        <Logo name="Simple CRM" only="wordmark" />
+      </div>
+      <div class="footer-row">
+        <p class="credit">
+          {t.footer.madeBefore}
+          <svg class="heart" viewBox="0 0 24 24" role="img" aria-label={t.footer.heart} focusable="false">
+            <path
+              fill="currentColor"
+              d="M12 20.5c-.3 0-.6-.1-.8-.3C7.2 16.7 3 13 3 8.9 3 6.2 5 4.5 7.3 4.5c1.8 0 3.2.9 4.7 2.7 1.5-1.8 2.9-2.7 4.7-2.7C19 4.5 21 6.2 21 8.9c0 4.1-4.2 7.8-8.2 11.3-.2.2-.5.3-.8.3z"
+            ></path>
+          </svg>
+          {t.footer.madeAfter} <a href={REPO_URL}>Chaska Dev</a>
+        </p>
+        <p>{t.footer.tagline}</p>
+        <p>{t.footer.license}</p>
+        <p><a href={REPO_URL}>{t.footer.repo}</a></p>
+        <p><a href="#main">{t.footer.top}</a></p>
+      </div>
+    </div>
+  </footer>
+</Base>
+
+<script>
+  // Accessible tabs (arrows, Home, End; digits on the frame sheet).
+  document.querySelectorAll<HTMLElement>("[data-tabs]").forEach((root) => {
+    const tabs = Array.from(root.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
+    const panels = Array.from(root.querySelectorAll<HTMLElement>('[role="tabpanel"]'));
+    let userPicked = false;
+    const select = (index: number, focus = false) => {
+      tabs.forEach((tab, i) => {
+        const on = i === index;
+        tab.setAttribute("aria-selected", String(on));
+        tab.tabIndex = on ? 0 : -1;
+        panels[i]?.classList.toggle("is-active", on);
+      });
+      if (focus) tabs[index]?.focus({ preventScroll: true });
+      // On the frame strip (horizontal scroll), bring the selected frame into view.
+      const sc = root.querySelector<HTMLElement>(".strip-scroll");
+      const tab = tabs[index];
+      if (sc && tab && sc.scrollWidth > sc.clientWidth + 1 && userPicked) {
+        const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        sc.scrollTo({ left: Math.max(0, tab.offsetLeft - 18), behavior: reduce ? "auto" : "smooth" });
+      }
+    };
+    tabs.forEach((tab, i) => {
+      tab.addEventListener("click", () => {
+        userPicked = true;
+        select(i);
+      });
+      tab.addEventListener("keydown", (e) => {
+        userPicked = true;
+        let next = -1;
+        if (e.key === "ArrowRight") next = (i + 1) % tabs.length;
+        else if (e.key === "ArrowLeft") next = (i - 1 + tabs.length) % tabs.length;
+        else if (e.key === "Home") next = 0;
+        else if (e.key === "End") next = tabs.length - 1;
+        if (next >= 0) {
+          e.preventDefault();
+          select(next, true);
+        }
+      });
+    });
+    if (root.hasAttribute("data-digits")) {
+      root.addEventListener("keydown", (e) => {
+        if (e.ctrlKey || e.metaKey || e.altKey) return;
+        const n = Number(e.key);
+        if (Number.isInteger(n) && n >= 1 && n <= tabs.length) select(n - 1, true);
+      });
+    }
+  });
+
+  // Mobile menu.
+  const menuBtn = document.querySelector<HTMLButtonElement>(".menu-btn");
+  const sheetMenu = document.getElementById("menu-sheet");
+  if (menuBtn && sheetMenu) {
+    const setMenu = (open: boolean) => {
+      sheetMenu.classList.toggle("open", open);
+      menuBtn.setAttribute("aria-expanded", String(open));
+      menuBtn.setAttribute(
+        "aria-label",
+        (open ? menuBtn.dataset.closeLabel : menuBtn.dataset.openLabel) ?? "",
+      );
+      sheetMenu.toggleAttribute("inert", !open);
+    };
+    setMenu(false);
+    menuBtn.addEventListener("click", () => setMenu(!sheetMenu.classList.contains("open")));
+    sheetMenu.querySelectorAll("a[href^='#']").forEach((a) => a.addEventListener("click", () => setMenu(false)));
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && sheetMenu.classList.contains("open")) {
+        setMenu(false);
+        menuBtn.focus();
+      }
+    });
+    document.addEventListener("click", (e) => {
+      const target = e.target as Node;
+      if (sheetMenu.classList.contains("open") && !sheetMenu.contains(target) && !menuBtn.contains(target)) {
+        setMenu(false);
+      }
+    });
+    window.matchMedia("(min-width: 901px)").addEventListener("change", (m) => {
+      if (m.matches) setMenu(false);
+    });
+  }
+
+  // Copy buttons.
+  document.querySelectorAll<HTMLButtonElement>("[data-copy], [data-copy-text]").forEach((btn) => {
+    const label = btn.querySelector("span");
+    let timer: number | undefined;
+    btn.addEventListener("click", async () => {
+      const target = btn.dataset.copy ? document.querySelector(btn.dataset.copy) : null;
+      const text = btn.dataset.copyText ?? target?.textContent ?? "";
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.setAttribute("readonly", "");
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        ta.remove();
+      }
+      if (label) label.textContent = btn.dataset.done ?? "";
+      btn.classList.add("is-done");
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        if (label) label.textContent = btn.dataset.label ?? "";
+        btn.classList.remove("is-done");
+      }, 1800);
+    });
+  });
+
+  // Reveal on scroll (content is visible by default without JS).
+  const items = Array.from(document.querySelectorAll<HTMLElement>(".reveal"));
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduce || !("IntersectionObserver" in window)) {
+    items.forEach((el) => el.classList.add("in"));
+  } else {
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("in");
+            io.unobserve(entry.target);
+          }
+        });
+      },
+      { rootMargin: "0px 0px -8% 0px", threshold: 0.08 },
+    );
+    items.forEach((el) => io.observe(el));
+  }
+</script>

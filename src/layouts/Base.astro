@@ -1,0 +1,48 @@
+---
+import "@fontsource-variable/inter";
+import "@fontsource-variable/archivo/wdth.css";
+import "../styles/global.css";
+import type { Lang } from "../i18n/content";
+
+interface Props {
+  lang: Lang;
+  htmlLang: string;
+  title: string;
+  description: string;
+}
+const { lang, htmlLang, title, description } = Astro.props;
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const site = Astro.site!;
+const paths = { es: `${base}/`, en: `${base}/en/` };
+const abs = (p: string) => new URL(p, site).href;
+---
+
+<!doctype html>
+<html lang={htmlLang} data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#0b0b0e" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href={`${base}/favicon.svg`} />
+    <link rel="canonical" href={abs(paths[lang])} />
+    <link rel="alternate" hreflang="es" href={abs(paths.es)} />
+    <link rel="alternate" hreflang="en" href={abs(paths.en)} />
+    <link rel="alternate" hreflang="x-default" href={abs(paths.es)} />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={abs(paths[lang])} />
+    <meta property="og:locale" content={lang === "es" ? "es_ES" : "en_US"} />
+    <meta property="og:locale:alternate" content={lang === "es" ? "en_US" : "es_ES"} />
+    <script is:inline>
+      document.documentElement.classList.add("js");
+    </script>
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>
